@@ -1,0 +1,6 @@
+flask
+flask-sqlalchemy
+flask-login
+werkzeug
+mysql-connector-python
+python-dotenv
