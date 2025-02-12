@@ -4,6 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import os
+import boto3
 from config import Config
 
 app = Flask(__name__)
@@ -30,8 +31,13 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+# Initialize S3 client
+s3_client = boto3.client('s3', 
+                         aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
+                         aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY'],
+                         region_name=app.config['AWS_REGION_NAME'])
 
 # Routes
 @app.route('/')
@@ -82,7 +88,11 @@ def upload():
         description = request.form['description']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+            # Upload to S3
+            s3_client.upload_fileobj(file, app.config['S3_BUCKET_NAME'], filename)
+
+            # Create a new photo record in the database
             new_photo = Photo(filename=filename, description=description, user_id=current_user.id)
             db.session.add(new_photo)
             db.session.commit()
@@ -92,18 +102,22 @@ def upload():
 @app.route('/download/<filename>')
 @login_required
 def download(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    # Generate the download URL from S3
+    file_url = s3_client.generate_presigned_url('get_object',
+                                               Params={'Bucket': app.config['S3_BUCKET_NAME'], 'Key': filename},
+                                               ExpiresIn=3600)  # Link expires in 1 hour
+    return redirect(file_url)
 
 @app.route('/delete/<int:photo_id>', methods=['POST'])
 @login_required
 def delete(photo_id):
     photo = Photo.query.get_or_404(photo_id)
     
-    # Delete the photo from the file system
+    # Delete the photo from S3
     try:
-        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], photo.filename))
+        s3_client.delete_object(Bucket=app.config['S3_BUCKET_NAME'], Key=photo.filename)
     except Exception as e:
-        print(f"Error deleting file: {e}")
+        print(f"Error deleting file from S3: {e}")
     
     # Delete the photo from the database
     db.session.delete(photo)
@@ -111,10 +125,7 @@ def delete(photo_id):
     
     return redirect(url_for('gallery'))
 
-
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
-    if not os.path.exists(app.config['UPLOAD_FOLDER']):
-        os.makedirs(app.config['UPLOAD_FOLDER'])
+        db.create_all()  # Create the database tables if they don't exist
     app.run(debug=False)
