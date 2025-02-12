@@ -99,16 +99,15 @@ def download(filename):
 def delete(photo_id):
     photo = Photo.query.get_or_404(photo_id)
     
-    if photo.user_id == current_user.id:
-        # Delete the photo from the file system
-        try:
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], photo.filename))
-        except Exception as e:
-            print(f"Error deleting file: {e}")
-        
-        # Delete the photo from the database
-        db.session.delete(photo)
-        db.session.commit()
+    # Delete the photo from the file system
+    try:
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], photo.filename))
+    except Exception as e:
+        print(f"Error deleting file: {e}")
+    
+    # Delete the photo from the database
+    db.session.delete(photo)
+    db.session.commit()
     
     return redirect(url_for('gallery'))
 
