@@ -48,7 +48,10 @@ def gallery():
         photos = Photo.query.filter(Photo.description.contains(search_query))
     else:
         photos = Photo.query.all()
-    return render_template('gallery.html', photos=photos)
+
+    # Pass the S3 bucket name to the template
+    return render_template('gallery.html', photos=photos, s3_bucket_name=app.config['S3_BUCKET_NAME'])
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
