@@ -67,9 +67,7 @@ def logout():
 def register():
     if request.method == 'POST':
         username = request.form['username']
-        password = request.form['password']
-        print(f"Username: {username}, Password: {password}")
-        # password = generate_password_hash(request.form['password'])
+        password = generate_password_hash(request.form['password'])
         new_user = User(username=username, password_hash=password)
         db.session.add(new_user)
         db.session.commit()
