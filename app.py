@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 import os
 import boto3
 from config import Config
+from flask import Response
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -105,11 +106,23 @@ def upload():
 @app.route('/download/<filename>')
 @login_required
 def download(filename):
-    # Generate the download URL from S3
-    file_url = s3_client.generate_presigned_url('get_object',
-                                               Params={'Bucket': app.config['S3_BUCKET_NAME'], 'Key': filename},
-                                               ExpiresIn=3600)  # Link expires in 1 hour
-    return redirect(file_url)
+    # Generate the pre-signed URL from S3 to fetch the file
+    file_url = s3_client.generate_presigned_url(
+        'get_object',
+        Params={'Bucket': app.config['S3_BUCKET_NAME'], 'Key': filename},
+        ExpiresIn=3600  # URL expires in 1 hour
+    )
+
+    # Fetch the file from S3 using the pre-signed URL
+    file_object = s3_client.get_object(Bucket=app.config['S3_BUCKET_NAME'], Key=filename)
+    
+    # Get the file data and set the response headers to force download
+    file_data = file_object['Body'].read()
+
+    response = Response(file_data, content_type=file_object['ContentType'])
+    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
+
+    return response
 
 @app.route('/delete/<int:photo_id>', methods=['POST'])
 @login_required
