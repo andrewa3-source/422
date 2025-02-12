@@ -1,16 +1,31 @@
+/* Background color for the body */
 body {
     background-color: #f8f9fa;
 }
 
+/* Style for images inside the cards */
 .card-img-top {
-    height: 200px;
-    object-fit: cover;
+    width: 100%; /* Ensures image stretches horizontally to fit the container */
+    height: 200px; /* Fixed height for image container */
+    object-fit: contain; /* Ensures the image maintains aspect ratio and fits within the container */
+    display: block; /* Removes space below the image */
+    margin: 0 auto; /* Centers the image inside the container */
 }
 
+/* Alert styling */
 .alert {
     margin-top: 20px;
 }
 
+/* Navbar margin */
 .navbar {
     margin-bottom: 30px;
+}
+
+/* Styling for image container (ensures proper fitting) */
+.img-container {
+    width: 100%; /* Ensures the container stretches to fit the card */
+    height: 200px; /* Fixed height for the container */
+    overflow: hidden; /* Hides overflowed part of the image */
+    position: relative; /* Keeps images inside the container without disturbing layout */
 }
