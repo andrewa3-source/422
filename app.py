@@ -92,7 +92,7 @@ def upload():
 @app.route('/download/<filename>')
 @login_required
 def download(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 if __name__ == '__main__':
     with app.app_context():
