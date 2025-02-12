@@ -15,7 +15,7 @@
     {% for photo in photos %}
     <div class="col">
         <div class="card h-100">
-            <img src="{{ url_for(filename='uploads/' + photo.filename) }}" 
+            <img src="{{ url_for('uploads', filename='/' + photo.filename) }}" 
                  class="card-img-top" alt="{{ photo.description }}">
             <div class="card-body">
                 <p class="card-text">{{ photo.description }}</p>
