@@ -94,6 +94,25 @@ def upload():
 def download(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+@app.route('/delete/<int:photo_id>', methods=['POST'])
+@login_required
+def delete(photo_id):
+    photo = Photo.query.get_or_404(photo_id)
+    
+    if photo.user_id == current_user.id:
+        # Delete the photo from the file system
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], photo.filename))
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+        
+        # Delete the photo from the database
+        db.session.delete(photo)
+        db.session.commit()
+    
+    return redirect(url_for('gallery'))
+
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
