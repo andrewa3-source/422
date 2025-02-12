@@ -92,7 +92,7 @@ def upload():
 @app.route('/download/<filename>')
 @login_required
 def download(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 @app.route('/delete/<int:photo_id>', methods=['POST'])
 @login_required
