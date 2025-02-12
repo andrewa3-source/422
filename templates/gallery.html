@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block title %}Photo Gallery{% endblock %}
 
 {% block content %}
@@ -15,7 +16,8 @@
     {% for photo in photos %}
     <div class="col">
         <div class="card h-100">
-            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" 
+            <!-- Display Image from S3 -->
+            <img src="https://{{ app.config['S3_BUCKET_NAME'] }}.s3.amazonaws.com/{{ photo.filename }}" 
                  class="card-img-top" alt="{{ photo.description }}">
             <div class="card-body">
                 <p class="card-text">{{ photo.description }}</p>
