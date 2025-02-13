@@ -7,12 +7,14 @@ import os
 import boto3
 from config import Config
 from flask import Response
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+load_dotenv()
 
 # Database Models
 class User(UserMixin, db.Model):
