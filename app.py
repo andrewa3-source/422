@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -8,53 +7,63 @@ import boto3
 from config import Config
 from flask import Response
 from dotenv import load_dotenv
+import uuid
 
 app = Flask(__name__)
 app.config.from_object(Config)
-db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 load_dotenv()
 
-# Database Models
-class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password_hash = db.Column(db.String(100), nullable=False)
-    photos = db.relationship('Photo', backref='user', lazy=True)
+# Initialize DynamoDB client
+dynamodb = boto3.resource(
+    'dynamodb',
+    aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
+    aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY'],
+    region_name=app.config['AWS_REGION_NAME']
+)
+users_table = dynamodb.Table(app.config['DYNAMODB_USERS_TABLE'])
+photos_table = dynamodb.Table(app.config['DYNAMODB_PHOTOS_TABLE'])
 
-class Photo(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.String(200))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+# Initialize S3 client
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
+    aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY'],
+    region_name=app.config['AWS_REGION_NAME']
+)
+
+# User class for Flask-Login
+class User(UserMixin):
+    def __init__(self, id, username, password_hash):
+        self.id = id
+        self.username = username
+        self.password_hash = password_hash
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    response = users_table.get_item(Key={'id': user_id})
+    user_data = response.get('Item')
+    if user_data:
+        return User(user_data['id'], user_data['username'], user_data['password_hash'])
+    return None
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-# Initialize S3 client
-s3_client = boto3.client('s3', 
-                         aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
-                         aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY'],
-                         region_name=app.config['AWS_REGION_NAME'])
-
-# Routes
 @app.route('/')
 @login_required
 def gallery():
     search_query = request.args.get('search', '')
     if search_query:
-        photos = Photo.query.filter(Photo.description.contains(search_query))
+        response = photos_table.scan(
+            FilterExpression="contains(description, :query)",
+            ExpressionAttributeValues={":query": search_query}
+        )
     else:
-        photos = Photo.query.all()
-
-    # Pass the S3 bucket name to the template
+        response = photos_table.scan()
+    photos = response.get('Items', [])
     return render_template('gallery.html', photos=photos, s3_bucket_name=app.config['S3_BUCKET_NAME'])
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -63,10 +72,17 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
-            login_user(user)
-            return redirect(url_for('gallery'))
+        response = users_table.scan(
+            FilterExpression="username = :username",
+            ExpressionAttributeValues={":username": username}
+        )
+        users = response.get('Items', [])
+        if users:
+            user_data = users[0]
+            if check_password_hash(user_data['password_hash'], password):
+                user = User(user_data['id'], user_data['username'], user_data['password_hash'])
+                login_user(user)
+                return redirect(url_for('gallery'))
     return render_template('login.html')
 
 @app.route('/logout')
@@ -80,9 +96,12 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = generate_password_hash(request.form['password'])
-        new_user = User(username=username, password_hash=password)
-        db.session.add(new_user)
-        db.session.commit()
+        user_id = str(uuid.uuid4())
+        users_table.put_item(Item={
+            'id': user_id,
+            'username': username,
+            'password_hash': password
+        })
         return redirect(url_for('login'))
     return render_template('register.html')
 
@@ -94,56 +113,43 @@ def upload():
         description = request.form['description']
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-
-            # Upload to S3
             s3_client.upload_fileobj(file, app.config['S3_BUCKET_NAME'], filename)
-
-            # Create a new photo record in the database
-            new_photo = Photo(filename=filename, description=description, user_id=current_user.id)
-            db.session.add(new_photo)
-            db.session.commit()
+            photo_id = str(uuid.uuid4())
+            photos_table.put_item(Item={
+                'id': photo_id,
+                'filename': filename,
+                'description': description,
+                'user_id': current_user.id
+            })
             return redirect(url_for('gallery'))
     return render_template('upload.html')
 
 @app.route('/download/<filename>')
 @login_required
 def download(filename):
-    # Generate the pre-signed URL from S3 to fetch the file
     file_url = s3_client.generate_presigned_url(
         'get_object',
         Params={'Bucket': app.config['S3_BUCKET_NAME'], 'Key': filename},
-        ExpiresIn=3600  # URL expires in 1 hour
+        ExpiresIn=3600
     )
-
-    # Fetch the file from S3 using the pre-signed URL
     file_object = s3_client.get_object(Bucket=app.config['S3_BUCKET_NAME'], Key=filename)
-    
-    # Get the file data and set the response headers to force download
     file_data = file_object['Body'].read()
-
     response = Response(file_data, content_type=file_object['ContentType'])
     response.headers['Content-Disposition'] = f'attachment; filename={filename}'
-
     return response
 
-@app.route('/delete/<int:photo_id>', methods=['POST'])
+@app.route('/delete/<photo_id>', methods=['POST'])
 @login_required
 def delete(photo_id):
-    photo = Photo.query.get_or_404(photo_id)
-    
-    # Delete the photo from S3
-    try:
-        s3_client.delete_object(Bucket=app.config['S3_BUCKET_NAME'], Key=photo.filename)
-    except Exception as e:
-        print(f"Error deleting file from S3: {e}")
-    
-    # Delete the photo from the database
-    db.session.delete(photo)
-    db.session.commit()
-    
+    response = photos_table.get_item(Key={'id': photo_id})
+    photo_data = response.get('Item')
+    if photo_data:
+        try:
+            s3_client.delete_object(Bucket=app.config['S3_BUCKET_NAME'], Key=photo_data['filename'])
+        except Exception as e:
+            print(f"Error deleting file from S3: {e}")
+        photos_table.delete_item(Key={'id': photo_id})
     return redirect(url_for('gallery'))
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()  # Create the database tables if they don't exist
     app.run(debug=False)
