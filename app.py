@@ -42,7 +42,7 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    response = users_table.get_item(Key={'id': user_id})
+    response = users_table.get_item(Key={'user_id': user_id})
     user_data = response.get('Item')
     if user_data:
         return User(user_data['id'], user_data['username'], user_data['password_hash'])
