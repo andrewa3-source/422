@@ -27,10 +27,10 @@ dynamodb_data = {
         {
             "PutRequest": {
                 "Item": {
-                    "id": {"N": str(item["id"])},  # id as Number
+                    "id": {"N": item["id"]},  # id as Number
                     "filename": {"S": item["filename"]},  # filename as String
                     "description": {"S": item["description"] if item["description"] else "N/A"},  # Handle empty descriptions
-                    "user_id": {"N": str(item["user_id"])}  # user_id as Number
+                    "user_id": {"N": item["user_id"]}  # user_id as Number
                 }
             }
         }
