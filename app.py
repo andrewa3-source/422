@@ -55,15 +55,30 @@ def allowed_file(filename):
 @login_required
 def gallery():
     search_query = request.args.get('search', '')
+
+    # Fetch photos from the DynamoDB Photos Table
     if search_query:
         response = photos_table.scan(
             FilterExpression="contains(description, :query)",
-            ExpressionAttributeValues={":query": search_query}
+            ExpressionAttributeValues={":query": {"S": search_query}}
         )
     else:
         response = photos_table.scan()
+
     photos = response.get('Items', [])
+
+    # Enrich photos with usernames from the Users Table
+    for photo in photos:
+        user_id = photo['user_id']['S']  # Extract user_id from the photo entry
+        user_response = users_table.get_item(
+            Key={"id": {"S": user_id}}
+        )
+        user = user_response.get('Item', {})
+        photo['username'] = user.get('username', {}).get('S', 'Unknown User')  # Default to 'Unknown User'
+
+    # Pass enriched photos to the template
     return render_template('gallery.html', photos=photos, s3_bucket_name=app.config['S3_BUCKET_NAME'])
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

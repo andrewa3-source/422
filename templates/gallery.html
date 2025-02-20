@@ -21,7 +21,7 @@
                  class="card-img-top" alt="{{ photo.description }}">
             <div class="card-body">
                 <p class="card-text">{{ photo.description }}</p>
-                <small class="text-muted">Uploaded by {{ photo.user_id.username }}</small>
+                <small class="text-muted">Uploaded by {{ photo.username }}</small>
             </div>
             <div class="card-footer">
                 <a href="{{ url_for('download', filename=photo.filename) }}" 
