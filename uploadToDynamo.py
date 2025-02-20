@@ -9,9 +9,9 @@ load_dotenv()
 # DynamoDB setup
 dynamodb = boto3.client(
     'dynamodb',
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name=AWS_REGION_NAME
+    aws_access_key_id=Config.AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=Config.AWS_SECRET_ACCESS_KEY,
+    region_name=Config.AWS_REGION_NAME
 )
 
 # Table name
