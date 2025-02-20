@@ -80,7 +80,7 @@ def login():
         if users:
             user_data = users[0]
             if check_password_hash(user_data['password_hash'], password):
-                user = User(user_data['id'], user_data['username'], user_data['password_hash'])
+                user = User(user_data['user_id'], user_data['username'], user_data['password_hash'])
                 login_user(user)
                 return redirect(url_for('gallery'))
     return render_template('login.html')
