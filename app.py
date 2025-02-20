@@ -45,7 +45,7 @@ def load_user(user_id):
     response = users_table.get_item(Key={'user_id': user_id})
     user_data = response.get('Item')
     if user_data:
-        return User(user_data['id'], user_data['username'], user_data['password_hash'])
+        return User(user_data['user_id'], user_data['username'], user_data['password_hash'])
     return None
 
 def allowed_file(filename):
@@ -98,7 +98,7 @@ def register():
         password = generate_password_hash(request.form['password'])
         user_id = str(uuid.uuid4())
         users_table.put_item(Item={
-            'id': user_id,
+            'user_id': user_id,
             'username': username,
             'password_hash': password
         })
@@ -116,7 +116,7 @@ def upload():
             s3_client.upload_fileobj(file, app.config['S3_BUCKET_NAME'], filename)
             photo_id = str(uuid.uuid4())
             photos_table.put_item(Item={
-                'id': photo_id,
+                'image_id': photo_id,
                 'filename': filename,
                 'description': description,
                 'user_id': current_user.id
@@ -141,14 +141,14 @@ def download(filename):
 @app.route('/delete/<photo_id>', methods=['POST'])
 @login_required
 def delete(photo_id):
-    response = photos_table.get_item(Key={'id': photo_id})
+    response = photos_table.get_item(Key={'photo_id': photo_id})
     photo_data = response.get('Item')
     if photo_data:
         try:
             s3_client.delete_object(Bucket=app.config['S3_BUCKET_NAME'], Key=photo_data['filename'])
         except Exception as e:
             print(f"Error deleting file from S3: {e}")
-        photos_table.delete_item(Key={'id': photo_id})
+        photos_table.delete_item(Key={'photo_id': photo_id})
     return redirect(url_for('gallery'))
 
 if __name__ == '__main__':
