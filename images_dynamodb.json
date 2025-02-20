@@ -1,0 +1,202 @@
+{
+    "Images": [
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "36"
+                    },
+                    "filename": {
+                        "S": "blastoise.gif"
+                    },
+                    "description": {
+                        "S": "BIGIG"
+                    },
+                    "user_id": {
+                        "N": "1"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "37"
+                    },
+                    "filename": {
+                        "S": "skeptical_cat.jpg"
+                    },
+                    "description": {
+                        "S": "N/A"
+                    },
+                    "user_id": {
+                        "N": "3"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "38"
+                    },
+                    "filename": {
+                        "S": "minesweeper_70.png"
+                    },
+                    "description": {
+                        "S": "N/A"
+                    },
+                    "user_id": {
+                        "N": "3"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "41"
+                    },
+                    "filename": {
+                        "S": "yin_yang_500.png"
+                    },
+                    "description": {
+                        "S": "ggg"
+                    },
+                    "user_id": {
+                        "N": "1"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "42"
+                    },
+                    "filename": {
+                        "S": "311_hash_table.JPG"
+                    },
+                    "description": {
+                        "S": "N/A"
+                    },
+                    "user_id": {
+                        "N": "3"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "43"
+                    },
+                    "filename": {
+                        "S": "window.jpg"
+                    },
+                    "description": {
+                        "S": "widnow"
+                    },
+                    "user_id": {
+                        "N": "4"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "44"
+                    },
+                    "filename": {
+                        "S": "guy_cries.gif"
+                    },
+                    "description": {
+                        "S": "This assignment made me like this guy"
+                    },
+                    "user_id": {
+                        "N": "4"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "45"
+                    },
+                    "filename": {
+                        "S": "eel.jpg"
+                    },
+                    "description": {
+                        "S": "A cool eel"
+                    },
+                    "user_id": {
+                        "N": "4"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "46"
+                    },
+                    "filename": {
+                        "S": "TRAIN.jpg"
+                    },
+                    "description": {
+                        "S": "A train!"
+                    },
+                    "user_id": {
+                        "N": "4"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "47"
+                    },
+                    "filename": {
+                        "S": "incense.jpg"
+                    },
+                    "description": {
+                        "S": "Incense"
+                    },
+                    "user_id": {
+                        "N": "4"
+                    }
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {
+                        "N": "51"
+                    },
+                    "filename": {
+                        "S": "Diagram_1.jpg"
+                    },
+                    "description": {
+                        "S": "N/A"
+                    },
+                    "user_id": {
+                        "N": "6"
+                    }
+                }
+            }
+        }
+    ]
+}
