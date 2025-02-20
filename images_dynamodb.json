@@ -3,8 +3,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "36"
+                    "image_id": {
+                        "S": "36"
                     },
                     "filename": {
                         "S": "blastoise.gif"
@@ -21,8 +21,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "37"
+                    "image_id": {
+                        "S": "37"
                     },
                     "filename": {
                         "S": "skeptical_cat.jpg"
@@ -39,8 +39,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "38"
+                    "image_id": {
+                        "S": "38"
                     },
                     "filename": {
                         "S": "minesweeper_70.png"
@@ -57,8 +57,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "41"
+                    "image_id": {
+                        "S": "41"
                     },
                     "filename": {
                         "S": "yin_yang_500.png"
@@ -75,8 +75,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "42"
+                    "image_id": {
+                        "S": "42"
                     },
                     "filename": {
                         "S": "311_hash_table.JPG"
@@ -93,8 +93,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "43"
+                    "image_id": {
+                        "S": "43"
                     },
                     "filename": {
                         "S": "window.jpg"
@@ -111,8 +111,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "44"
+                    "image_id": {
+                        "S": "44"
                     },
                     "filename": {
                         "S": "guy_cries.gif"
@@ -129,8 +129,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "45"
+                    "image_id": {
+                        "S": "45"
                     },
                     "filename": {
                         "S": "eel.jpg"
@@ -147,8 +147,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "46"
+                    "image_id": {
+                        "S": "46"
                     },
                     "filename": {
                         "S": "TRAIN.jpg"
@@ -165,8 +165,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "47"
+                    "image_id": {
+                        "S": "47"
                     },
                     "filename": {
                         "S": "incense.jpg"
@@ -183,8 +183,8 @@
         {
             "PutRequest": {
                 "Item": {
-                    "id": {
-                        "N": "51"
+                    "image_id": {
+                        "S": "51"
                     },
                     "filename": {
                         "S": "Diagram_1.jpg"
