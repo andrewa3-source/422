@@ -18,7 +18,7 @@ dynamodb = boto3.client(
 table_name = 'Images'
 
 # Load the JSON data from imageref.json
-with open('imageref.json', 'r') as f:
+with open('images_dynamodb.json', 'r') as f:
     data = json.load(f)
 
 # Convert to DynamoDB batch-write format
