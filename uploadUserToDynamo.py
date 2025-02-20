@@ -18,7 +18,7 @@ dynamodb = boto3.client(
 dynamodb = boto3.client('dynamodb')
 
 # Read the JSON file
-with open('user.json', 'r') as json_file:
+with open('users.json', 'r') as json_file:
     data = json.load(json_file)
 
 # Prepare the data for batch upload
