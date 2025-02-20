@@ -15,7 +15,7 @@ dynamodb = boto3.client(
 )
 
 # Table name
-table_name = 'Images'
+table_name = 'ImageReferences'
 
 # Load the JSON data from images_dynamodb.json
 with open('images_dynamodb.json', 'r') as f:
