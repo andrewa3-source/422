@@ -68,7 +68,7 @@ def gallery():
     # Enrich photo data with usernames
     for photo in photos:
         user_id = str(photo['user_id'])  # Convert user_id to string
-        user_response = users_table.get_item(Key={'id': user_id})
+        user_response = users_table.get_item(Key={'user_id': user_id})
         photo['username'] = user_response.get('Item', {}).get('username', 'Unknown')  # Add username or fallback
 
     return render_template('gallery.html', photos=photos, s3_bucket_name=app.config['S3_BUCKET_NAME'])
