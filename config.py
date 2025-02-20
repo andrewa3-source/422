@@ -14,3 +14,7 @@ class Config:
     AWS_REGION_NAME = 'us-east-2'  # Update this with your region
     S3_BUCKET_NAME = 'isucloudcomputingphotobucket'  # Replace with your bucket name
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp'}
+
+     # DynamoDB Table Names
+    DYNAMODB_USERS_TABLE = os.environ.get('DYNAMODB_USERS_TABLE', 'UsersTable')
+    DYNAMODB_PHOTOS_TABLE = os.environ.get('DYNAMODB_PHOTOS_TABLE', 'PhotosTable')
