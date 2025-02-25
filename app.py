@@ -153,13 +153,13 @@ def download(filename):
 @app.route('/delete/<photo_id>', methods=['POST'])
 @login_required
 def delete(photo_id):
-    photo_data = photos.find_one({'image_id': photo_id})
+    photo_data = photos.find_one({'_id': photo_id})
     if photo_data:
         try:
             s3_client.delete_object(Bucket=app.config['S3_BUCKET_NAME'], Key=photo_data['filename'])
         except Exception as e:
             print(f"Error deleting file from S3: {e}")
-        photos.delete_one({'image_id': photo_id})
+        photos.delete_one({'_id': photo_id})
     return redirect(url_for('gallery'))
 
 if __name__ == '__main__':
