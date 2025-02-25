@@ -18,3 +18,4 @@ class Config:
      # DynamoDB Table Names
     DYNAMODB_USERS_TABLE = os.environ.get('DYNAMODB_USERS_TABLE', 'UsersTable')
     DYNAMODB_PHOTOS_TABLE = os.environ.get('DYNAMODB_PHOTOS_TABLE', 'PhotosTable')
+    MONGO_DB_NAME = os.environ.get('MONGO_DB_NAME')
