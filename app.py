@@ -8,6 +8,8 @@ from config import Config
 from flask import Response
 from dotenv import load_dotenv
 import uuid
+from pymongo import MongoClient
+import certifi
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -15,17 +17,18 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 load_dotenv()
 
-# Initialize DynamoDB client
-dynamodb = boto3.resource(
-    'dynamodb',
-    aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
-    aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY'],
-    region_name=app.config['AWS_REGION_NAME']
+# MongoDB Connection
+client = MongoClient(
+    "mongodb://Blastoise:Charizard@se422documentdb.cluster-chc2qgsomjo0.us-east-2.docdb.amazonaws.com:27017",
+    tls=True,
+    tlsCAFile='global-bundle.pem',
+    retryWrites=False
 )
-users_table = dynamodb.Table(app.config['DYNAMODB_USERS_TABLE'])
-photos_table = dynamodb.Table(app.config['DYNAMODB_PHOTOS_TABLE'])
+db = client[app.config['MONGO_DB_NAME']]  # Add this to your Config
+users = db.users
+photos = db.photos
 
-# Initialize S3 client
+# Initialize S3 client (keep this for file storage)
 s3_client = boto3.client(
     's3',
     aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
@@ -35,17 +38,16 @@ s3_client = boto3.client(
 
 # User class for Flask-Login
 class User(UserMixin):
-    def __init__(self, id, username, password_hash):
-        self.id = id
-        self.username = username
-        self.password_hash = password_hash
+    def __init__(self, user_data):
+        self.id = str(user_data['_id'])
+        self.username = user_data['username']
+        self.password_hash = user_data['password_hash']
 
 @login_manager.user_loader
 def load_user(user_id):
-    response = users_table.get_item(Key={'user_id': user_id})
-    user_data = response.get('Item')
+    user_data = users.find_one({'_id': user_id})
     if user_data:
-        return User(user_data['user_id'], user_data['username'], user_data['password_hash'])
+        return User(user_data)
     return None
 
 def allowed_file(filename):
@@ -55,24 +57,15 @@ def allowed_file(filename):
 @login_required
 def gallery():
     search_query = request.args.get('search', '')
-    if search_query:
-        response = photos_table.scan(
-            FilterExpression="contains(description, :query)",
-            ExpressionAttributeValues={":query": search_query}
-        )
-    else:
-        response = photos_table.scan()
-
-    photos = response.get('Items', [])
-
-    # Enrich photo data with usernames
-    for photo in photos:
-        user_id = str(photo['user_id'])  # Convert user_id to string
-        user_response = users_table.get_item(Key={'user_id': user_id})
-        photo['username'] = user_response.get('Item', {}).get('username', 'Unknown')  # Add username or fallback
-
-    return render_template('gallery.html', photos=photos, s3_bucket_name=app.config['S3_BUCKET_NAME'])
-
+    query = {'description': {'$regex': search_query, '$options': 'i'}} if search_query else {}
+    photos_list = list(photos.find(query))
+    
+    # Enrich with usernames
+    for photo in photos_list:
+        user = users.find_one({'_id': photo['user_id']})
+        photo['username'] = user['username'] if user else 'Unknown'
+    
+    return render_template('gallery.html', photos=photos_list, s3_bucket_name=app.config['S3_BUCKET_NAME'])
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -81,17 +74,11 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        response = users_table.scan(
-            FilterExpression="username = :username",
-            ExpressionAttributeValues={":username": username}
-        )
-        users = response.get('Items', [])
-        if users:
-            user_data = users[0]
-            if check_password_hash(user_data['password_hash'], password):
-                user = User(user_data['user_id'], user_data['username'], user_data['password_hash'])
-                login_user(user)
-                return redirect(url_for('gallery'))
+        user_data = users.find_one({'username': username})
+        if user_data and check_password_hash(user_data['password_hash'], password):
+            user = User(user_data)
+            login_user(user)
+            return redirect(url_for('gallery'))
     return render_template('login.html')
 
 @app.route('/logout')
@@ -106,8 +93,8 @@ def register():
         username = request.form['username']
         password = generate_password_hash(request.form['password'])
         user_id = str(uuid.uuid4())
-        users_table.put_item(Item={
-            'user_id': user_id,
+        users.insert_one({
+            '_id': user_id,
             'username': username,
             'password_hash': password
         })
@@ -123,9 +110,7 @@ def upload():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             s3_client.upload_fileobj(file, app.config['S3_BUCKET_NAME'], filename)
-            photo_id = str(uuid.uuid4())
-            photos_table.put_item(Item={
-                'image_id': photo_id,
+            photos.insert_one({
                 'filename': filename,
                 'description': description,
                 'user_id': current_user.id
@@ -150,14 +135,13 @@ def download(filename):
 @app.route('/delete/<photo_id>', methods=['POST'])
 @login_required
 def delete(photo_id):
-    response = photos_table.get_item(Key={'image_id': photo_id})
-    photo_data = response.get('Item')
+    photo_data = photos.find_one({'_id': photo_id})
     if photo_data:
         try:
             s3_client.delete_object(Bucket=app.config['S3_BUCKET_NAME'], Key=photo_data['filename'])
         except Exception as e:
             print(f"Error deleting file from S3: {e}")
-        photos_table.delete_item(Key={'image_id': photo_id})
+        photos.delete_one({'_id': photo_id})
     return redirect(url_for('gallery'))
 
 if __name__ == '__main__':
