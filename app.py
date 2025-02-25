@@ -78,11 +78,25 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user_data = users.find_one({'username': username})
-        if user_data and check_password_hash(user_data['password_hash'], password):
-            user = User(user_data)
+
+        # Retrieve all users with the given username
+        user_datas = users.find({'username': username})
+        matched_user = None
+
+        # Loop through each user and check the password hash
+        for user_data in user_datas:
+            if check_password_hash(user_data['password_hash'], password):
+                matched_user = user_data
+                break
+
+        if matched_user:
+            user = User(matched_user)
             login_user(user)
             return redirect(url_for('gallery'))
+        else:
+            # Optionally, you can flash a message or handle login errors here
+            pass
+
     return render_template('login.html')
 
 @app.route('/logout')
