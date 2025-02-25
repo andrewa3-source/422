@@ -66,7 +66,7 @@ def gallery():
     
     # Enrich with usernames
     for photo in photos_list:
-        user = users.find_one({'image_id': photo['user_id']})
+        user = users.find_one({'user_id': photo['user_id']})
         photo['username'] = user['username'] if user else 'Unknown'
     
     return render_template('gallery.html', photos=photos_list, s3_bucket_name=app.config['S3_BUCKET_NAME'])
