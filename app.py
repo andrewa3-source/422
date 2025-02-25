@@ -1,3 +1,4 @@
+import warnings
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,6 +11,9 @@ from dotenv import load_dotenv
 import uuid
 from pymongo import MongoClient
 import certifi
+
+# Suppress the DocumentDB compatibility warning
+warnings.filterwarnings("ignore", message="You appear to be connected to a DocumentDB cluster.")
 
 app = Flask(__name__)
 app.config.from_object(Config)
