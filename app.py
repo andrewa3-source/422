@@ -30,7 +30,7 @@ client = MongoClient(
 )
 db = client[app.config['MONGO_DB_NAME']]  # Add this to your Config
 users = db.users
-photos = db.photos
+photos = db.imageReferences
 
 # Initialize S3 client (keep this for file storage)
 s3_client = boto3.client(
